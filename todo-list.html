@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .completed .task-text {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+  <div class="card shadow p-4">
+    <h3 class="text-center mb-4">Todo List V2</h3>
+    
+    <div class="input-group mb-3">
+      <select id="prioritySelect" class="form-select" style="max-width: 150px;">
+        <option value="secondary">Zema</option>
+        <option value="warning" selected>Vidēja</option>
+        <option value="danger">Svarīgi!</option>
+      </select>
+      
+      <input type="text" id="taskInput" class="form-control" placeholder="Ieraksti darbu...">
+      <button class="btn btn-primary" onclick="addTask()">Pievienot</button>
+    </div>
+
+    <ul id="taskList" class="list-group">	
+        </ul>
+  </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", loadTasks);
+
+    function addTask() {
+        let input = document.getElementById("taskInput");
+        let priority = document.getElementById("prioritySelect").value;
+        let taskText = input.value.trim();
+
+        if (taskText === "") {
+            alert("Lūdzu, ieraksti kaut ko!");
+            return;
+        }
+
+        createTaskElement(taskText, priority, false);
+        saveTasks();
+        input.value = "";
+    }
+
+    function createTaskElement(text, priority, isCompleted) {
+        let list = document.getElementById("taskList");
+        let li = document.createElement("li");
+        
+        // Izmantojam prioritāti kā Bootstrap klasi (badge krāsai)
+        li.className = "list-group-item d-flex justify-content-between align-items-center";
+        if (isCompleted) li.classList.add("completed");
+
+        li.innerHTML = `
+            <div>
+                <span class="badge bg-${priority} me-2">${getPriorityLabel(priority)}</span>
+                <span class="task-text" onclick="toggleTask(this)" style="cursor:pointer">${text}</span>
+            </div>
+            <button class="btn btn-outline-danger btn-sm" onclick="removeTask(this)">Dzēst</button>
+        `;
+
+        list.appendChild(li);
+    }
+
+    // Palīgfunkcija, lai pārvērstu klases nosaukumu cilvēkam saprotamā tekstā
+    function getPriorityLabel(priority) {
+        if (priority === 'danger') return 'SVARĪGI';
+        if (priority === 'warning') return 'Vidējs';
+        return 'Zema';
+    }
+
+    function toggleTask(element) {
+        element.closest(".list-group-item").classList.toggle("completed");
+        saveTasks();
+    }
+
+    function removeTask(button) {
+        button.closest(".list-group-item").remove();
+        saveTasks();
+    }
+
+    function saveTasks() {
+        let tasks = [];
+        document.querySelectorAll(".list-group-item").forEach(li => {
+            // Atrodam prioritātes klasi no badge (badge bg-danger -> danger)
+            let badge = li.querySelector(".badge");
+            let priorityClass = badge.classList[1].replace('bg-', '');
+
+            tasks.push({
+                text: li.querySelector(".task-text").innerText,
+                priority: priorityClass,
+                completed: li.classList.contains("completed")
+            });
+        });
+        localStorage.setItem("myTasks", JSON.stringify(tasks));
+    }
+
+    function loadTasks() {
+        let savedData = localStorage.getItem("myTasks");
+        if (savedData) {
+            JSON.parse(savedData).forEach(task => {
+                createTaskElement(task.text, task.priority, task.completed);
+            });
+        }
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
